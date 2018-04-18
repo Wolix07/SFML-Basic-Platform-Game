@@ -1,6 +1,6 @@
 #include<iostream>
 #include <SFML/Graphics.hpp>
-#include <thread>
+#include <cmath>
 
 using namespace std;
 
@@ -22,6 +22,8 @@ public:
     void drawPlayer(sf::RenderWindow &window)
     {
         sf::CircleShape shape2(200.f);
+        shape2.setPosition(0,0);
+        window.draw(shape2);
         window.draw(rectangle);
     }
     
@@ -109,45 +111,47 @@ public:
         
         sGrenade.setRadius((50.f));
         sGrenade.setFillColor(sf::Color::Blue);
-        sGrenade.setPosition(rectangle.getPosition().x, rectangle.getPosition().y);
         
     }
-    
-    void drawGrenade()//sf::RenderWindow &window)
+    void setPos(float x, float y)
     {
-        cout<<"drawing"<<endl;
+        sGrenade.setPosition(x,y);
+    }
+    void drawGrenade(sf::RenderWindow &window)
+    {
+        window.draw(sGrenade);
         return;
     }
-     /*
-    void draw( sf::RenderTarget& tgt, sf::RenderStates states) const
+    void moveGrenade(float tickTime)
     {
-        tgt.draw(sGrenade, states) ;
-        return;
-    }*/
-    
+        sGrenade.setPosition(sf::Vector2f(sGrenade.getPosition().x + 20  * tickTime *50 ,sGrenade.getPosition().y));
+    }
+private:
+
 };
 
-class Grenade_spell : Grenade
+class Enemy : Player
 {
 public:
-    
-    Grenade_spell(){}
-    
-    void grenade_live()//sf::RenderWindow &window)
+    sf::RectangleShape sEnemy;
+    Enemy()
     {
-
-        unique_ptr<Grenade> pGrenade(new Grenade);
-        while(1)
-        {
-            pGrenade->drawGrenade();
-            cout<<"KAPPA_GRANAT"<<endl;
-            return;
-        }
+        sEnemy.setSize(sf::Vector2f(30, 30));
+        sEnemy.setFillColor(sf::Color::Yellow);
+    }
+    void setPos(float x, float y)
+    {
+        sEnemy.setPosition(x,y);
+    }
+    void drawEnemy(sf::RenderWindow &window)
+    {
+        window.draw(sEnemy);
         return;
     }
-    
+private:
     
 };
+
 
 
 int main()
@@ -162,30 +166,44 @@ int main()
     shape.setFillColor(sf::Color::Green);
     
     unique_ptr<Player> myPlayer(new Player);
-    
-    //unique_ptr<Grenade_spell> grenade_spell(new Grenade_spell);
-    
-    
-    
+    unique_ptr<Enemy> enemy_pref(new Enemy);
+    unique_ptr<Grenade> grenade_spell(new Grenade);
+    int num_of_grenades = 10;
+    int num_of_enemy = 20;
+    float grenades[num_of_grenades][2];
+    float enemys[num_of_enemy][2];
+
+    for (int i = 0; i < num_of_grenades; i++)
+    {
+        grenades[i][1] = 0;
+        grenades[i][0] = 0;
+    }
+    float grenadeCooldown = 0;
+    for (int i = 0; i < num_of_enemy; i++)
+    {
+        enemys[i][1] = 0;
+        enemys[i][0] = 0;
+    }
+    float enemyCooldown = 0;
     //Grenade_spell * taskPtr = new Grenade_spell();
     
-    std::thread t2(&Grenade_spell::grenade_live,Grenade_spell());
+    
     
     //Grenade_spell grenade_spell;
-
+    //std::thread t2(&Grenade_spell::grenade_live,Grenade_spell());
     sf::Clock clock;
     
     //test<<<<<<<<<<<
     sf::Vector2f movement(25.0,15.0);
     sf::Clock timer;
     sf::Time tickRate;
-    
+    sf::Time grenadecd;
     
     // Start main loop
     
     //Somewhere in the main loop
     
-    
+    float xv, yv;
     
     while (window.isOpen())
     {
@@ -210,6 +228,22 @@ int main()
             }
             
         }
+        enemyCooldown -= (float)grenadecd.asMilliseconds() / 1000;
+        if(enemyCooldown <= 0)
+        {
+            enemyCooldown = 0.5;
+            for (int i = 0; i < num_of_enemy; i++)
+            {
+                if (enemys[i][0] == 0 && enemys[i][1] == 0)
+                {
+                    //grenade_spell->setPos(grenades[i][0],grenades[i][1]);
+                    enemys[i][0] = (rand() % 100) * 4 + 800;
+                    enemys[i][1] = (rand() % 100) * 3 + 150;
+                    break;
+                }
+            }
+        }
+        
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::W) && myPlayer->rectangle.getPosition().y == 400)
         {
             move_up = true;
@@ -226,8 +260,12 @@ int main()
         {
             move_right = true;
         }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+        //cout<<<<endl;
+        grenadeCooldown -= (float)grenadecd.asMilliseconds() / 1000;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && grenadeCooldown <= 0)
         {
+            grenadeCooldown = 1;
+            grenadecd = timer.restart();
             grenade = true;
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
@@ -249,6 +287,16 @@ int main()
         {
             //odpalanie
             //grenade_pref->drawGrenade(window);
+            for (int i = 0; i < num_of_grenades; i++)
+            {
+                if (grenades[i][0] == 0 && grenades[i][1] == 0)
+                {
+                    //grenade_spell->setPos(grenades[i][0],grenades[i][1]);
+                    grenades[i][0] = myPlayer->rectangle.getPosition().x;
+                    grenades[i][1] = myPlayer->rectangle.getPosition().y;
+                    break;
+                }
+            }
             grenade = false;
         }
         
@@ -278,8 +326,50 @@ int main()
         myPlayer->movePlayer((float)tickRate.asMilliseconds() / 1000);
         
         
+        
+        
         window.clear();
-        window.draw(shape);
+        for (int i = 0; i < num_of_grenades; i++)
+        {
+            if (grenades[i][0] != 0 || grenades[i][1] != 0)
+            {
+                grenade_spell->setPos(grenades[i][0], grenades[i][1]);
+                grenade_spell->moveGrenade((float)tickRate.asMilliseconds() / 1000);
+                grenades[i][0] = grenade_spell->sGrenade.getPosition().x;
+                grenades[i][1] = grenade_spell->sGrenade.getPosition().y;
+                if(grenades[i][0] > 1200)
+                {
+                    grenades[i][0] = 0;
+                    grenades[i][1] = 0;
+                }
+            
+                for (int j = 0; j < num_of_enemy; j++)
+                {
+                    if (enemys[j][0] != 0 || enemys[j][1] != 0)
+                    {
+                        xv = (enemys[j][0] + 15 - grenades[i][0]+50);
+                        yv = (enemys[j][1] + 15 - grenades[i][1]+50);
+                        if(sqrt(xv*xv + yv*yv) < 50)
+                        {
+                            enemys[j][0] = 0;
+                            enemys[j][1] = 0;
+                        }
+                    }
+                }
+                
+                grenade_spell->drawGrenade(window);
+            }
+            
+        }
+        for (int i = 0; i < num_of_enemy; i++)
+        {
+            if (enemys[i][0] != 0 || enemys[i][1] != 0)
+            {
+                enemy_pref->setPos(enemys[i][0], enemys[i][1]);
+                enemy_pref->drawEnemy(window);
+            }
+            
+        }
         myPlayer->drawPlayer(window);
         window.display();
         
@@ -289,6 +379,8 @@ int main()
         }
     }
     
-    t2.join();
+
+    //t2.join();
+    
     return 0;
 }
