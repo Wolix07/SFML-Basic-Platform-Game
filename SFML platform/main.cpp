@@ -347,8 +347,8 @@ int main()
                 {
                     if (enemys[j][0] != 0 || enemys[j][1] != 0)
                     {
-                        xv = (enemys[j][0] + 15 - grenades[i][0]+50);
-                        yv = (enemys[j][1] + 15 - grenades[i][1]+50);
+                        xv = (enemys[j][0] + 15 - grenades[i][0]-50);
+                        yv = (enemys[j][1] + 15 - grenades[i][1]-50);
                         if(sqrt(xv*xv + yv*yv) < 50)
                         {
                             enemys[j][0] = 0;
