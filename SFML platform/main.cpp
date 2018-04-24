@@ -4,7 +4,19 @@
 
 using namespace std;
 
-class Player
+
+class Draw
+{
+public:
+    Draw(){}
+    template <class T>
+    void drawObject(sf::RenderWindow &window, T const& shape)
+    {
+        window.draw(shape);
+    }
+};
+
+class Player : Draw
 {
 public:
     
@@ -17,14 +29,6 @@ public:
         rectangle.setFillColor(sf::Color::Red);
         rectangle.setPosition(50,400);
         cout<<"DEBUG_LOG_"<<endl;
-    }
-    
-    void drawPlayer(sf::RenderWindow &window)
-    {
-        sf::CircleShape shape2(200.f);
-        shape2.setPosition(0,0);
-        window.draw(shape2);
-        window.draw(rectangle);
     }
     
     void setAction(char action)
@@ -50,8 +54,6 @@ public:
     
     void updateVelocity()
     {
-        
-        
         if (velocity.x > 0)
         {
             velocity.x -= 2;
@@ -101,26 +103,19 @@ private:
 
 };
 
-class Grenade : Player
+class Grenade : Draw
 {
 public:
     sf::CircleShape sGrenade;
     
     Grenade()
     {
-        
         sGrenade.setRadius((50.f));
         sGrenade.setFillColor(sf::Color::Blue);
-        
     }
     void setPos(float x, float y)
     {
         sGrenade.setPosition(x,y);
-    }
-    void drawGrenade(sf::RenderWindow &window)
-    {
-        window.draw(sGrenade);
-        return;
     }
     void moveGrenade(float tickTime)
     {
@@ -143,11 +138,6 @@ public:
     {
         sEnemy.setPosition(x,y);
     }
-    void drawEnemy(sf::RenderWindow &window)
-    {
-        window.draw(sEnemy);
-        return;
-    }
 private:
     
 };
@@ -164,15 +154,18 @@ int main()
     //window.setFramerateLimit(60);
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
-    
+    unique_ptr<Draw> draw(new Draw);
     unique_ptr<Player> myPlayer(new Player);
     unique_ptr<Enemy> enemy_pref(new Enemy);
     unique_ptr<Grenade> grenade_spell(new Grenade);
     int num_of_grenades = 10;
+    
     int num_of_enemy = 20;
     float grenades[num_of_grenades][2];
     float enemys[num_of_enemy][2];
-
+    
+    bool doubleJump = true;
+    
     for (int i = 0; i < num_of_grenades; i++)
     {
         grenades[i][1] = 0;
@@ -244,10 +237,19 @@ int main()
             }
         }
         
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W) && myPlayer->rectangle.getPosition().y == 400)
+        
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
-            move_up = true;
+            if(myPlayer->rectangle.getPosition().y == 400)
+            {
+                move_up = true;
+            }
+            else if(doubleJump)
+            {
+                move_up = true;
+            }
         }
+
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
             move_down = true;
@@ -278,6 +280,12 @@ int main()
             myPlayer->updateVelocity();
         }
         
+        if(myPlayer->rectangle.getPosition().y == 400)
+        {
+            doubleJump = true;
+        }
+        
+        
         if(myPlayer->rectangle.getPosition().y != 400)
         {
             myPlayer->updateJump();
@@ -286,7 +294,6 @@ int main()
         if(grenade)
         {
             //odpalanie
-            //grenade_pref->drawGrenade(window);
             for (int i = 0; i < num_of_grenades; i++)
             {
                 if (grenades[i][0] == 0 && grenades[i][1] == 0)
@@ -356,8 +363,7 @@ int main()
                         }
                     }
                 }
-                
-                grenade_spell->drawGrenade(window);
+                draw->drawObject(window, grenade_spell->sGrenade);
             }
             
         }
@@ -366,11 +372,11 @@ int main()
             if (enemys[i][0] != 0 || enemys[i][1] != 0)
             {
                 enemy_pref->setPos(enemys[i][0], enemys[i][1]);
-                enemy_pref->drawEnemy(window);
+                draw->drawObject(window, enemy_pref->sEnemy);
             }
             
         }
-        myPlayer->drawPlayer(window);
+        draw->drawObject(window, myPlayer->rectangle);
         window.display();
         
         if(isFinished)
