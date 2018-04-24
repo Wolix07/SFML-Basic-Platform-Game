@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SFML platform/main.cpp"
-            timestampString = "546260046.831359"
+            timestampString = "546303876.613776"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "392"
-            endingLineNumber = "392"
+            startingLineNumber = "404"
+            endingLineNumber = "404"
             landmarkName = "main()"
             landmarkType = "9">
          </BreakpointContent>

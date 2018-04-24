@@ -152,19 +152,18 @@ int main()
     sf::RenderWindow window(sf::VideoMode(1200, 600), "SFML works!");
     
     //window.setFramerateLimit(60);
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
     unique_ptr<Draw> draw(new Draw);
     unique_ptr<Player> myPlayer(new Player);
     unique_ptr<Enemy> enemy_pref(new Enemy);
     unique_ptr<Grenade> grenade_spell(new Grenade);
     int num_of_grenades = 10;
     
-    int num_of_enemy = 20;
+    int num_of_enemy = 40;
     float grenades[num_of_grenades][2];
     float enemys[num_of_enemy][2];
     
     bool doubleJump = true;
+    bool keyOff = false;
     
     for (int i = 0; i < num_of_grenades; i++)
     {
@@ -224,7 +223,7 @@ int main()
         enemyCooldown -= (float)grenadecd.asMilliseconds() / 1000;
         if(enemyCooldown <= 0)
         {
-            enemyCooldown = 0.5;
+            enemyCooldown = 0.3;
             for (int i = 0; i < num_of_enemy; i++)
             {
                 if (enemys[i][0] == 0 && enemys[i][1] == 0)
@@ -243,13 +242,19 @@ int main()
             if(myPlayer->rectangle.getPosition().y == 400)
             {
                 move_up = true;
+                keyOff = false;
             }
-            else if(doubleJump)
+            else if(doubleJump && keyOff)
             {
                 move_up = true;
+                doubleJump = false;
             }
         }
-
+        
+        if (!sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+        {
+            keyOff = true;
+        }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
             move_down = true;
@@ -354,9 +359,16 @@ int main()
                 {
                     if (enemys[j][0] != 0 || enemys[j][1] != 0)
                     {
-                        xv = (enemys[j][0] + 15 - grenades[i][0]-50);
-                        yv = (enemys[j][1] + 15 - grenades[i][1]-50);
-                        if(sqrt(xv*xv + yv*yv) < 50)
+                        xv = (enemys[j][0]  - grenades[i][0] - 50);
+                        yv = (enemys[j][1]  - grenades[i][1] - 50);
+                        if(sqrt(xv*xv + yv*yv) < 50.f)
+                        {
+                            enemys[j][0] = 0;
+                            enemys[j][1] = 0;
+                        }
+                        xv = (enemys[j][0] + 30  - grenades[i][0] - 50);
+                        yv = (enemys[j][1] + 30  - grenades[i][1] - 50);
+                        if(sqrt(xv*xv + yv*yv) < 50.f)
                         {
                             enemys[j][0] = 0;
                             enemys[j][1] = 0;
